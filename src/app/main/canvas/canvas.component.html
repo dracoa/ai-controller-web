@@ -1,0 +1,6 @@
+<div>
+  <canvas class="canvas" width="1920" height="1080" #canvas></canvas>
+</div>
+<ng-container *ngIf="blob$ | async"></ng-container>
+<ng-container *ngIf="boxes$ | async"></ng-container>
+<ng-container *ngIf="draw$ | async"></ng-container>
