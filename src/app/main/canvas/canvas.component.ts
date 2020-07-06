@@ -55,9 +55,10 @@ export class CanvasComponent implements OnInit {
     img.onload = () => {
       this.baseLayer.context.drawImage(img, 0, 0);
       if (!!info.autoCast) {
-        const skills = info.autoCast.skills;
-        skills.forEach(s => {
+        const skills = Object.values(info.autoCast.skills);
+        skills.forEach((s: any) => {
           const box = s.box;
+          this.baseLayer.context.fillText(s.text, box.x, box.y);
           this.baseLayer.context.strokeRect(box.x, box.y, box.w, box.h);
         });
       }
