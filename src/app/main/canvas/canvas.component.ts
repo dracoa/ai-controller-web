@@ -1,7 +1,9 @@
-import {Component, ElementRef, OnInit, ViewChild} from '@angular/core';
+import {Component, OnInit, ViewChild} from '@angular/core';
 import {WebsocketService} from '../../@core/websocket.service';
 import {combineLatest, Observable, Observer} from 'rxjs';
 import {concatMap, tap} from 'rxjs/operators';
+import {LayerComponent} from '../layer/layer.component';
+import {CursorPos} from '../../@core/model';
 
 export const loadBlob = (blob: Blob): Observable<any> => {
   return new Observable((obs: Observer<any>) => {
@@ -22,43 +24,43 @@ export const loadBlob = (blob: Blob): Observable<any> => {
 })
 export class CanvasComponent implements OnInit {
 
-  @ViewChild('canvas', {static: true})
-  canvas: ElementRef<HTMLCanvasElement>;
-  canvasElm: HTMLCanvasElement;
-  context: CanvasRenderingContext2D;
+  @ViewChild('base', {static: true})
+  baseLayer: LayerComponent;
+  @ViewChild('info', {static: true})
+  infoLayer: LayerComponent;
 
   blob$: Observable<Blob>;
-  boxes$: Observable<any[]>;
+  info$: Observable<any[]>;
+  cursor$: Observable<any>;
   draw$: Observable<any>;
 
-  constructor(private ws: WebsocketService) { }
+  constructor(private ws: WebsocketService) {
+  }
 
   ngOnInit(): void {
-    this.canvasElm = this.canvas.nativeElement;
-    this.setContext();
-    this.boxes$ = this.ws.boxes$;
+    this.info$ = this.ws.info$;
+    this.cursor$ = this.ws.mousePos$.pipe(tap((info) => this.drawCursor(info)));
     this.blob$ = this.ws.screen$.pipe(concatMap(b => loadBlob(b)));
-    this.draw$ = combineLatest([this.blob$, this.boxes$])
-      .pipe(tap(([img, boxes]) => this.drawScreen(img, boxes)));
+    this.draw$ = combineLatest([this.blob$, this.info$])
+      .pipe(tap(([img, info]) => this.drawScreen(img, info)));
   }
 
-  setContext(){
-    this.context = this.canvasElm.getContext('2d');
-    this.context.strokeStyle = '#ff00ff';
-    this.context.lineWidth = 5;
-    this.context.fillStyle = this.context.strokeStyle;
-    this.context.font = '40px Arial';
+  drawCursor(pos: CursorPos) {
+    this.infoLayer.clearAll();
+    this.infoLayer.context.fillRect(pos.x, pos.y, 10, 10);
   }
 
-  drawScreen(dataURL: any, boxes: any[]){
+  drawScreen(dataURL: any, info: any) {
     const img = new Image();
-    //  var img = document.createElement("img");
     img.onload = () => {
-      this.context.drawImage(img, 0, 0);
-      boxes.forEach(box => {
-        this.context.fillText(box.class, box.x + 20, box.y + 40);
-        this.context.strokeRect(box.x, box.y, box.w, box.h);
-      });
+      this.baseLayer.context.drawImage(img, 0, 0);
+      if (!!info.autoCast) {
+        const skills = info.autoCast.skills;
+        skills.forEach(s => {
+          const box = s.box;
+          this.baseLayer.context.strokeRect(box.x, box.y, box.w, box.h);
+        });
+      }
     };
     img.src = dataURL;
   }

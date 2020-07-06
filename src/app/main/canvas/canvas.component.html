@@ -1,6 +1,12 @@
-<div>
-  <canvas class="canvas" width="1920" height="1080" #canvas></canvas>
+<div class="canvas" style="position: relative">
+  <div class="canvas-layer" style="position:absolute; z-index: 1">
+    <app-layer #info stroke="#22ff33"></app-layer>
+  </div>
+  <div class="canvas-layer" style="position:absolute; z-index: 0">
+    <app-layer #base stroke="#ffffff"></app-layer>
+  </div>
 </div>
 <ng-container *ngIf="blob$ | async"></ng-container>
-<ng-container *ngIf="boxes$ | async"></ng-container>
+<ng-container *ngIf="info$ | async"></ng-container>
 <ng-container *ngIf="draw$ | async"></ng-container>
+<ng-container *ngIf="cursor$ | async"></ng-container>
