@@ -22,7 +22,6 @@ export class WebsocketService {
     this.close$.pipe(throttleTime(1000)).subscribe((v) => {
       this.connect();
     });
-
   }
 
   private connect() {
@@ -36,8 +35,10 @@ export class WebsocketService {
     );
     this.socket.pipe(pluck('data')).subscribe((data) => {
       if (data instanceof Blob) {
+        console.log('blob');
         this.screen$.next(data);
       } else {
+        console.log('text');
         const json = JSON.parse(data);
         if (json.type === 'info') {
           this.info$.next(json);

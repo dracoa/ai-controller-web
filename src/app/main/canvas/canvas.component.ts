@@ -40,9 +40,12 @@ export class CanvasComponent implements OnInit {
   ngOnInit(): void {
     this.info$ = this.ws.info$;
     this.cursor$ = this.ws.mousePos$.pipe(tap((info) => this.drawCursor(info)));
-    this.blob$ = this.ws.screen$.pipe(concatMap(b => loadBlob(b)));
-    this.draw$ = combineLatest([this.blob$, this.info$])
-      .pipe(tap(([img, info]) => this.drawScreen(img, info)));
+    this.blob$ = this.ws.screen$.pipe(
+      concatMap(b => loadBlob(b)),
+      tap((img) => this.drawScreen(img))
+    );
+    // this.draw$ = combineLatest([this.blob$])
+    //   .pipe(tap(([img, info]) => this.drawScreen(img, info)));
   }
 
   drawCursor(pos: CursorPos) {
@@ -50,18 +53,10 @@ export class CanvasComponent implements OnInit {
     this.infoLayer.context.fillRect(pos.x, pos.y, 10, 10);
   }
 
-  drawScreen(dataURL: any, info: any) {
+  drawScreen(dataURL: any) {
     const img = new Image();
     img.onload = () => {
       this.baseLayer.context.drawImage(img, 0, 0);
-      if (!!info.autoCast) {
-        const skills = Object.values(info.autoCast.skills);
-        skills.forEach((s: any) => {
-          const box = s.box;
-          this.baseLayer.context.fillText(s.text, box.x, box.y);
-          this.baseLayer.context.strokeRect(box.x, box.y, box.w, box.h);
-        });
-      }
     };
     img.src = dataURL;
   }
